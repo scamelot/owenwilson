@@ -2,6 +2,7 @@
 const express = require('express')
 const path = require('path')
 const fsPromises = require('fs/promises')
+
 const app = express()
 const port = 3000
 
@@ -11,10 +12,22 @@ app.get('/', (req,res) => {
     res.render('public/index.html')
 })
 
+async function buildHTML(data) {
+    const video = data.video['1080p']
+    return `<video controls autoplay width='100%' max-height='100%' src="${video}">`
+}
+
 app.get('/random', async (req,res) => {
-    const file = await fsPromises.readFile('./data.json')
-    const data = JSON.parse(file)
-    res.send(`<video controls autoplay width='100%' max-height='100%' src="${data.video['1080p']}">`)
+    // const file = await fsPromises.readFile('./data.json')
+    try {
+        const blob = await fetch('https://owen-wilson-wow-api.herokuapp.com/wows/random')
+        const data = await blob.json()
+        const html = await buildHTML(data[0])
+        res.send(html)
+    }
+    catch (e) {
+        console.error(e)
+    }
 })
 
 app.listen(port, () => {
